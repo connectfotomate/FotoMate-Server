@@ -12,5 +12,5 @@ const dbconnect = () => {
     .catch((err) => {
       console.log(err);
     });
-};
+};  
 export default dbconnect;

@@ -5,6 +5,7 @@ import http from 'http'
 import dbconnect from './config/dbConnection.js';
 import userRoute from './routes/userRoute.js';
 import adminRoute from './routes/adminRoute.js';
+import vendorRoute from './routes/vendorRoute.js';
  
 import cors from 'cors'
 const PORT = 3000;
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use("/",userRoute)
 app.use("/admin",adminRoute)
+app.use("/vendor",vendorRoute)
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send('Something went wrong!');

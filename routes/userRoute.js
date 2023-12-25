@@ -1,7 +1,7 @@
 import express from "express";
 import {
   emailOtpVerification,
-  forgetPassword,
+  forgotPassword,
   resendOtp,
   userSignup,
   resetPassword,
@@ -15,8 +15,8 @@ userRoute.post("/signup", userSignup);
 
 userRoute.post("/otp", emailOtpVerification);
 userRoute.post("/resendOtp", resendOtp);
-userRoute.post("/forget", forgetPassword);
-userRoute.post("/reset", resetPassword);
+userRoute.post("/forgotPassword", forgotPassword);
+userRoute.put("/resetPassword/:id/:token", resetPassword);
 userRoute.post("/login", userLogin);
 userRoute.get("/userList", getUserDetails);
 

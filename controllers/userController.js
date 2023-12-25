@@ -11,8 +11,8 @@ let otpId;
 
 export const userSignup = async (req, res) => {
   try {
-    console.log('hi from server');
-    console.log(req.body);
+    
+   
     const { name, email, mobile, password } = req.body;
     const hashedPassword = await securePassword(password);
     const emailExist = await User.findOne({ email: email });
@@ -88,15 +88,20 @@ export const resendOtp = async (req, res) => {
       .json({ message: "Failed to send OTP. Please try again later." });
   }
 };
-export const forgetPassword = async (req, res) => {
+export const forgotPassword = async (req, res) => {
   try {
     const { userEmail } = req.body;
+    
     const secret = process.env.USER_JWT_KEY;
     const oldUser = await User.findOne({ email: userEmail });
+    
+
     if (!oldUser) {
-      res.status(401).json({ message: "User is not registered" });
+      return res.status(401).json({ message: "User is not registered" });
     }
+
     const token = jwt.sign({ id: oldUser._id }, secret, { expiresIn: "5m" });
+
     let transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -104,24 +109,25 @@ export const forgetPassword = async (req, res) => {
         pass: process.env.EMAIL_PASS,
       },
     });
+
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: userEmail,
       subject: "Forgot password",
-      text: `http://localhost:3000/resetPassword/${oldUser._id}/${token}`,
+      text: `http://localhost:5173/resetPassword/${oldUser._id}/${token}`,
     };
 
     transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
         console.error("Error sending email:", error);
-        return res
-          .status(500)
-          .json({ message: "Failed to send email for password reset." });
+        res.status(500).json({
+          message: "Failed to send email for password reset.",
+        });
       } else {
         console.log("Email sent:", info.response);
-        return res
-          .status(200)
-          .json({ message: "Email sent successfully for password reset." });
+        res.status(200).json({
+          message: "Email sent successfully for password reset.",
+        });
       }
     });
   } catch (error) {
@@ -129,11 +135,13 @@ export const forgetPassword = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 export const resetPassword = async (req, res) => {
   try {
     const { password } = req.body;
-    const { id, token } = req.query;
+    const { id, token } = req.params;
     const user = await User.findById(id);
+    console.log(user,'from reset')
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
@@ -161,9 +169,9 @@ export const resetPassword = async (req, res) => {
 export const userLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log(req.body,'body')
+    
     const user = await User.findOne({ email: email });
-    console.log(user,'user');
+    
     if (!user) {
       return res.status(401).json({ message: "User not registered" });
     }

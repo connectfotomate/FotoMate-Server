@@ -1,7 +1,11 @@
 
 import express from 'express'
-import { adminLogin } from "../controllers/adminController.js";
+import { adminLogin, blockUser, blockVendor, userList, vendorList } from "../controllers/adminController.js";
 const adminRoute = express()
 
 adminRoute.post('/login',adminLogin)
-export default adminRoute;
+adminRoute.get('/userList',userList)
+adminRoute.get('/vendorList', vendorList);
+adminRoute.patch('/vendorBlock',blockVendor)
+adminRoute.patch('/userBlock',blockUser)   
+export default adminRoute; 
