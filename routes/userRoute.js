@@ -6,11 +6,13 @@ import {
   userSignup,
   resetPassword,
   userLogin,
-  getUserDetails
+  getUserDetails,
+  google
 } from "../controllers/userController.js";
+import { userTokenVerify } from '../middlewares/authVerify.js'
+import { createStudio } from "../controllers/vendorController.js";
 const userRoute = express();
 
-console.log('hi from route')
 userRoute.post("/signup", userSignup);
 
 userRoute.post("/otp", emailOtpVerification);
@@ -19,6 +21,8 @@ userRoute.post("/forgotPassword", forgotPassword);
 userRoute.put("/resetPassword/:id/:token", resetPassword);
 userRoute.post("/login", userLogin);
 userRoute.get("/userList", getUserDetails);
+userRoute.post("/google", google);
+
 
 
 export default userRoute;

@@ -5,7 +5,7 @@ const adminRoute = express()
 
 adminRoute.post('/login',adminLogin)
 adminRoute.get('/userList',userList)
-adminRoute.get('/vendorList', vendorList);
+adminRoute.get('/vendorList', vendorList); 
 adminRoute.patch('/vendorBlock',blockVendor)
-adminRoute.patch('/userBlock',blockUser)   
-export default adminRoute; 
+adminRoute.patch('/userBlock',blockUser)      
+export default adminRoute;   

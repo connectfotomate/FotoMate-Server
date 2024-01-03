@@ -141,7 +141,6 @@ export const resetPassword = async (req, res) => {
     const { password } = req.body;
     const { id, token } = req.params;
     const user = await User.findById(id);
-    console.log(user,'from reset')
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
@@ -189,7 +188,8 @@ export const userLogin = async (req, res) => {
             process.env.USER_JWT_KEY,
             { expiresIn: "1h" }
           );
-          res.status(200).json({user,token,message:`Welcome ${user.name}`})
+          const { password, ...userWithoutPassword } = user.toObject();
+          res.status(200).json({user:userWithoutPassword,token,message:`Welcome ${user.name}`})
         }else{
             res.status(403).json({message:'Incorrect password'})
         }
@@ -207,6 +207,7 @@ export const userLogin = async (req, res) => {
 export const getUserDetails = async(req,res)=>{
     try {
         const {id} = req.query;
+        console.log(id,typeof(id))
         const userData = await User.findOne({_id:id})
         res.status(200).json({userData})
     } catch (error) {
@@ -214,3 +215,40 @@ export const getUserDetails = async(req,res)=>{
         return res.status(500).json({message:'Internal server error'})
     }
 }
+
+export const google = async (req, res) => {
+  try {
+    const { email, displayName, photoURL } = req.body;
+    const user = await User.findOne({ email: email });
+    if (user) {
+      const token = jwt.sign({ id: user._id }, process.env.USER_JWT_KEY);
+      const { password, ...userData } = user._doc;
+
+      res.status(200).json({ user: userData, token });
+      
+    } else {
+      const generatedPassword = Math.random().toString(36).slice(-8);
+      const hashedPassword = await securePassword(generatedPassword);
+
+      const newUser = new User({
+        name: displayName.split(" ").join("").toLowerCase() + Math.random().toString(36).slice(-4),
+        email: email,
+        password: hashedPassword,
+        profileImage: photoURL,
+        isEmailVerified:true
+      });
+
+      await newUser.save();
+
+      const token = jwt.sign({ id: newUser._id }, process.env.USER_JWT_KEY);
+      const { password, ...userData } = newUser._doc;
+
+      console.log(userData,'user')
+      return res.status(200).json({ user: userData, token, message: 'User created successfully.' });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+ 

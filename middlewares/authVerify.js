@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 const userSecret = process.env.USER_JWT_KEY
-import User from '../models/userModel'
+import User from '../models/userModel.js'
 
 export const userTokenVerify = async (req, res, next) => {
   try {
@@ -12,7 +12,7 @@ export const userTokenVerify = async (req, res, next) => {
       token = token.slice(7, token.length).trimLeft()
     }
     const verified = jwt.verify(token, userSecret)
-    req.user = verified
+    req.user = verified 
     if (verified.role == 'user') {
       const user = await User.findOne({ email: verified.email })
       if (user.isBlocked) {
