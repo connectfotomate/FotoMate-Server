@@ -91,7 +91,6 @@ export const vendorLoginVerify = async (req, res) => {
     const { email, password } = req.body;
     const vendor = await Vendor.findOne({ email: email });
     const studio = await Studio.findOne({vendorId:vendor._id})
-    console.log(studio,'studiooooooooooooo')  
 
     if (!vendor) {
       return res.status(401).json({ message: "Vendor not registered" });
@@ -143,7 +142,7 @@ export const createStudio = async (req, res) => {
       description,
       vendorId,
     } = req.body;
-    
+     console.log(galleryImages,'gaalery')
     const uploadGalleryImages = await galleryImages.map((image) => {
       return cloudinary.uploader.upload(image, {
         folder: "GalleryImages",
@@ -152,7 +151,6 @@ export const createStudio = async (req, res) => {
 
     const uploadedGalleryImages = await Promise.all(uploadGalleryImages);
     let galleryImage = uploadedGalleryImages.map((image) => image.secure_url);
-     console.log();
     await Studio.create({
       studioName,
       vendorId,
@@ -175,14 +173,11 @@ export const createStudio = async (req, res) => {
 export const vendorStudio = async (req, res) => {
     try {
       const { vendorId } = req.params;
-      console.log('Received vendorId:', vendorId);
       const studio = await Studio.findOne({ vendorId: vendorId });
-      console.log(studio,'studiooooooooooooooooo')
       if (!studio) {
         return res.status(404).json({ error: 'Studio not found' });
       }
   
-      console.log('Found studio:', studio);
       res.status(200).json({ studio });
     } catch (error) {   
       console.error(error.message);

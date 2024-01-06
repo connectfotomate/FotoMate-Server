@@ -79,6 +79,8 @@ export const vendorList = async (req, res) => {
               _id: '$studioInfo._id',
               studioName: '$studioInfo.studioName',
               city: '$studioInfo.city',
+              isBlocked:'$studioInfo.isBlocked',
+              isVerified:'$studioInfo.isVerified',
               description: '$studioInfo.description',
               coverImage: '$studioInfo.coverImage',
               galleryImages: '$studioInfo.galleryImages',
@@ -123,3 +125,31 @@ export const blockVendor = async (req, res) => {
     res.status(500).json({ status: "internal server error" });
   }
 };
+export const blockStudio = async (req, res) => {
+  try {
+    const { studioId, status } = req.body;
+    console.log(req.body, "server body");
+    console.log('studioId:', studioId);
+    console.log('status:', status);
+
+    // Ensure status is a boolean
+    if (typeof status !== 'boolean') {
+      console.error('Invalid status type:', typeof status);
+      return res.status(400).json({ message: 'Invalid status type' });
+    }
+
+    // Check if vendorId needs to be adjusted based on your schema
+    await Studio.findOneAndUpdate(
+      { _id: studioId }, // Adjust if needed
+      { $set: { isBlocked: !status } },
+      { new: true }
+    );
+
+    res.status(201).json({ message: "updated" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+ 

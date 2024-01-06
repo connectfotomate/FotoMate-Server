@@ -30,12 +30,7 @@ const vendorSchema = new mongoose.Schema({
     image: {
         type: String,
     },
-    studio:
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Studio",
-        },
-      
+   
 }, { timestamps: true });
 
 export default mongoose.model('Vendor', vendorSchema);

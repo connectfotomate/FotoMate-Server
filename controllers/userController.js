@@ -1,6 +1,8 @@
 import securePassword from "../util/securePassword.js";
 import mailSender from "../util/nodeMailer.js";
 import User from "../models/userModel.js";
+import Vendor from "../models/vendorModel.js"
+import Studio from "../models/studioModel.js"
 import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
@@ -207,7 +209,6 @@ export const userLogin = async (req, res) => {
 export const getUserDetails = async(req,res)=>{
     try {
         const {id} = req.query;
-        console.log(id,typeof(id))
         const userData = await User.findOne({_id:id})
         res.status(200).json({userData})
     } catch (error) {
@@ -243,7 +244,6 @@ export const google = async (req, res) => {
       const token = jwt.sign({ id: newUser._id }, process.env.USER_JWT_KEY);
       const { password, ...userData } = newUser._doc;
 
-      console.log(userData,'user')
       return res.status(200).json({ user: userData, token, message: 'User created successfully.' });
     }
   } catch (error) {
@@ -251,4 +251,78 @@ export const google = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
- 
+ export const vendorList = async (req,res)=>{
+  try {
+    const vendor = await Vendor.aggregate([
+      {
+        $lookup: {
+          from: 'studios', // The name of the Studio collection
+          localField: '_id',
+          foreignField: 'vendorId',
+          as: 'studioInfo',
+        },
+      },
+      {
+        $unwind: '$studioInfo',
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          mobile: 1,
+          email: 1,
+          isBlocked: 1,
+          isVerified: 1,
+          studioInfo: {
+            _id: '$studioInfo._id',
+            studioName: '$studioInfo.studioName',
+            city: '$studioInfo.city',
+            description: '$studioInfo.description',
+            coverImage: '$studioInfo.coverImage',
+            galleryImages: '$studioInfo.galleryImages',
+          },
+        },
+      },
+    ]).exec();
+    return res.status(200).json(vendor);
+  } catch (error) {
+    console.log(error.message)
+  }
+ }
+
+ export const singleStudio = async(req,res)=>{
+  try {
+    const {vendorId} = req.params;
+    const studio = await Studio.findOne({ vendorId: vendorId }).populate('vendorId');
+    return res.status(200).json(studio)
+  } catch (error) {
+    console.log(error) 
+  } 
+ }  
+
+ export const updateProfileImage = async(req,res)=>{
+  try {
+     const {userId,image,prevImg}= req.body;
+     try {
+       if (prevImg) {
+        const publicId = prevImg.match(/\/v\d+\/(.+?)\./)[1];
+        const deletionResult = await cloudinary.uploader.destroy(publicId, {
+          folder: "profileImage", // Optional, specify the folder if necessary
+        });
+       }
+       const profileFile = await cloudinary.uploader.upload(image, {
+        folder: "profileImage",
+      });
+      const userData = await User.findByIdAndUpdate(
+        { _id: userId },
+        { $set: { profileImage: profileFile.secure_url } },
+        { new: true }
+      );
+      return res.status(200).json({ userData });
+     } catch (uploadError) {
+      console.log(object)
+     }
+  } catch (error) {
+    console.log(error)
+  }
+ }

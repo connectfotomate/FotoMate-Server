@@ -18,6 +18,16 @@ const studioSchema = new mongoose.Schema({
     type:String,
     
   },
+  isBlocked: {
+      type: Boolean,
+      default: false,
+      required: true,
+  },
+  isVerified: {
+      type: Boolean,
+      default: false,
+      required: true,
+  },
   coverImage: {
     type: String,
     required: true,

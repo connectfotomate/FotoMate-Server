@@ -7,7 +7,9 @@ import {
   resetPassword,
   userLogin,
   getUserDetails,
-  google
+  google,
+  vendorList,
+  singleStudio
 } from "../controllers/userController.js";
 import { userTokenVerify } from '../middlewares/authVerify.js'
 import { createStudio } from "../controllers/vendorController.js";
@@ -21,7 +23,9 @@ userRoute.post("/forgotPassword", forgotPassword);
 userRoute.put("/resetPassword/:id/:token", resetPassword);
 userRoute.post("/login", userLogin);
 userRoute.get("/userList", getUserDetails);
+userRoute.get("/vendorList", vendorList);
 userRoute.post("/google", google);
+userRoute.get("/singleStudio/:vendorId", singleStudio);
 
 
 
