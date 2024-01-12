@@ -8,7 +8,7 @@ import adminRoute from './routes/adminRoute.js';
 import vendorRoute from './routes/vendorRoute.js';
  
 import cors from 'cors'
-const PORT = 3000;
+const PORT = 3001;
 
 app.use(cors({
     origin:'http://localhost:5173',

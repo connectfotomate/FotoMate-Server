@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import Otp from "../models/otpModel.js";
+import cloudinary from "../util/cloudinary.js";
 dotenv.config();
 let otpId;
 
@@ -19,8 +20,8 @@ export const userSignup = async (req, res) => {
     const hashedPassword = await securePassword(password);
     const emailExist = await User.findOne({ email: email });
     if (emailExist) {
-      return res
-        .status(490)
+    return res
+        .status(400)
         .json({ message: "User already registered with this email" });
     }
     const user = new User({
@@ -121,12 +122,10 @@ export const forgotPassword = async (req, res) => {
 
     transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
-        console.error("Error sending email:", error);
         res.status(500).json({
           message: "Failed to send email for password reset.",
         });
       } else {
-        console.log("Email sent:", info.response);
         res.status(200).json({
           message: "Email sent successfully for password reset.",
         });
@@ -208,7 +207,7 @@ export const userLogin = async (req, res) => {
 };
 export const getUserDetails = async(req,res)=>{
     try {
-        const {id} = req.query;
+        const {id} = req.params;
         const userData = await User.findOne({_id:id})
         res.status(200).json({userData})
     } catch (error) {
@@ -300,29 +299,37 @@ export const google = async (req, res) => {
   } 
  }  
 
- export const updateProfileImage = async(req,res)=>{
+
+
+ export const updateProfileImage = async (req, res) => {
   try {
-     const {userId,image,prevImg}= req.body;
-     try {
-       if (prevImg) {
-        const publicId = prevImg.match(/\/v\d+\/(.+?)\./)[1];
-        const deletionResult = await cloudinary.uploader.destroy(publicId, {
-          folder: "profileImage", // Optional, specify the folder if necessary
-        });
-       }
-       const profileFile = await cloudinary.uploader.upload(image, {
-        folder: "profileImage",
-      });
-      const userData = await User.findByIdAndUpdate(
-        { _id: userId },
-        { $set: { profileImage: profileFile.secure_url } },
+    const {_id, img } = req.body;
+    console.log(_id)
+    // Validate request body
+    if (!img||!_id) {
+      return res.status(400).json({ message: "Invalid request body" });
+    }
+  
+    const photoResult = await cloudinary.uploader.upload(img, { folder: 'userphoto' });
+    const user = await User.findByIdAndUpdate(
+        _id,
+        { $set: { profileImage: photoResult.secure_url } },
         { new: true }
-      );
-      return res.status(200).json({ userData });
-     } catch (uploadError) {
-      console.log(object)
-     }
+    );
+     console.log(user,'usrennnnnnn')
+    if (!user) {
+        return res.status(404).json({ message: "User not found" });
+    }
+
+   return res.status(200).json({ message: "Profile picture updated successfully", user });
+    
+
+   
   } catch (error) {
-    console.log(error)
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
   }
- }
+};
+
+
+

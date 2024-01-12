@@ -9,6 +9,10 @@ const categorySchema = new mongoose.Schema({
   description: {
     type: String,
   },
+  unilist:{
+    type:Boolean,
+    default:false
+  },
   subcategories: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -19,4 +23,4 @@ const categorySchema = new mongoose.Schema({
 
 const Category = mongoose.model('Category', categorySchema);
 
-module.exports = Category;
+export default Category;
