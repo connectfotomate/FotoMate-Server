@@ -37,6 +37,9 @@ const studioSchema = new mongoose.Schema({
     required: true,
 }
   ],
+  categories:[{
+    type: String,
+  }]
  
 });
 

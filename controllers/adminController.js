@@ -91,8 +91,6 @@ export const vendorList = async (req, res) => {
         },
       },
     ]).exec();
-    console.log(vendor, "vendors");
-
     res.status(200).json(vendor);
   } catch (error) {
     console.log(error.message);
@@ -115,7 +113,6 @@ export const blockUser = async (req, res) => {
 export const blockVendor = async (req, res) => {
   try {
     const { vendorId, status } = req.body;
-    console.log(req.body, "server body");
     await Vendor.findByIdAndUpdate(
       vendorId,
       { $set: { isBlocked: !status } },
@@ -131,10 +128,6 @@ export const blockVendor = async (req, res) => {
 export const blockStudio = async (req, res) => {
   try {
     const { studioId, status } = req.body;
-    console.log(req.body, "server body");
-    console.log("studioId:", studioId);
-    console.log("status:", status);
-
     // Ensure status is a boolean
     if (typeof status !== "boolean") {
       console.error("Invalid status type:", typeof status);
@@ -151,7 +144,7 @@ export const blockStudio = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
-  }
+  } 
 };
 
 export const addCategory = async (req, res) => {
@@ -179,9 +172,7 @@ export const categoryList = async (req, res) => {
   }
 };
 export const singleCategory = async (req, res) => {
-  console.log("workingg");
   try {
-    console.log(req.params);
     const { cat_id } = req.params;
     const category = await Category.findById(cat_id);
     res.status(200).json(category);
@@ -190,22 +181,30 @@ export const singleCategory = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-//  export const editCategory = async (req,res)=>{
-//   try {
-//     const {_id} = req.params
-//     const  category = await Category.findOneAndUpdate(_id,{$set:{}})
+ export const editCategory = async (req,res)=>{
+  try {
+    const {cat_id,name,description} = req.body;
+    const  category = await Category.findByIdAndUpdate({_id:cat_id},{$set:{
+      name:name,description:description
+    }},
+    {new:true}
+    );
+    res.status(201).json({message:'Category Edited Successfully'})
 
-//   } catch (error) {
-//     console.log(error.message)
-//     res.status(500).json({message:'Internal Server error'})
-//   }
-//  }
+  } catch (error) {
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.name) {
+      // Handle duplicate key error for the 'name' field
+      return res.status(400).json({ message: 'Category name already exists' });
+    }
+    console.log(error.message) 
+    res.status(500).json({message:'Internal Server error'})
+  }
+ }
 
 export const addSubCategory = async (req, res) => {
   try {
     const {id,values,baseImage} = req.body.cat_id;
     const {name,description} = values
-    console.log(id,values,name,description,baseImage,"_id,value,sname,description,baseImage")
     const image = await cloudinary.uploader.upload(baseImage,{folder:'sub_category_img'})
     const subCategory = new Subcategory({
       name: name,
@@ -224,7 +223,7 @@ export const addSubCategory = async (req, res) => {
   } catch (error) {
     console.log(error.message);
   }
-};
+}; 
 export const subcategory = async(req,res)=>{
   try {
     const {cat_id} = req.params;
@@ -232,6 +231,26 @@ export const subcategory = async(req,res)=>{
     res.status(200).json(subcategory)
   } catch (error) { 
     console.log(error.message)
-    res.status(200).json({message:"Internal server error"})
+    res.status(500).json({message:"Internal server error"})
   }
+}
+
+export const unlistCategory = async(req,res)=>{
+  try {
+    const {_id,status} = req.body;
+    
+    const updatedCategory = await Category.findByIdAndUpdate( 
+      {_id},
+      { $set: { unlist: !status } },
+      { new: true } 
+    );
+    if (updatedCategory) {
+      res.status(200).json({ message: 'Category updated successfully', category: updatedCategory });
+    } else {
+      res.status(404).json({ message: 'Category not found' }); 
+    }
+  } catch (error) {
+    console.log(error.message)
+    res.status(500).json({message:"Internal server error"}) 
+  } 
 }

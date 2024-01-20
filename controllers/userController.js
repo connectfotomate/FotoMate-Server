@@ -1,26 +1,25 @@
 import securePassword from "../util/securePassword.js";
 import mailSender from "../util/nodeMailer.js";
 import User from "../models/userModel.js";
-import Vendor from "../models/vendorModel.js"
-import Studio from "../models/studioModel.js"
+import Vendor from "../models/vendorModel.js";
+import Studio from "../models/studioModel.js";
 import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import Otp from "../models/otpModel.js";
 import cloudinary from "../util/cloudinary.js";
+import Category from "../models/categoryModel.js";
 dotenv.config();
 let otpId;
 
 export const userSignup = async (req, res) => {
   try {
-    
-   
     const { name, email, mobile, password } = req.body;
     const hashedPassword = await securePassword(password);
     const emailExist = await User.findOne({ email: email });
     if (emailExist) {
-    return res
+      return res
         .status(400)
         .json({ message: "User already registered with this email" });
     }
@@ -78,10 +77,10 @@ export const resendOtp = async (req, res) => {
     const { userEmail } = req.body;
     const { _id, name, email } = await User.findOne({ email: userEmail });
     const otpId = mailSender(name, email, _id);
-    
+
     if (otpId) {
       res.status(200).json({
-        message:`An OTP has been resent to ${email}.`,
+        message: `An OTP has been resent to ${email}.`,
       });
     }
   } catch (error) {
@@ -94,10 +93,9 @@ export const resendOtp = async (req, res) => {
 export const forgotPassword = async (req, res) => {
   try {
     const { userEmail } = req.body;
-    
+
     const secret = process.env.USER_JWT_KEY;
     const oldUser = await User.findOne({ email: userEmail });
-    
 
     if (!oldUser) {
       return res.status(401).json({ message: "User is not registered" });
@@ -169,9 +167,9 @@ export const resetPassword = async (req, res) => {
 export const userLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
     const user = await User.findOne({ email: email });
-    
+
     if (!user) {
       return res.status(401).json({ message: "User not registered" });
     }
@@ -190,31 +188,35 @@ export const userLogin = async (req, res) => {
             { expiresIn: "1h" }
           );
           const { password, ...userWithoutPassword } = user.toObject();
-          res.status(200).json({user:userWithoutPassword,token,message:`Welcome ${user.name}`})
-        }else{
-            res.status(403).json({message:'Incorrect password'})
+          res.status(200).json({
+            user: userWithoutPassword,
+            token,
+            message: `Welcome ${user.name}`,
+          });
+        } else {
+          res.status(403).json({ message: "Incorrect password" });
         }
-      }else{
-        res.status(403).json({message:'User is blocked by admin'})
+      } else {
+        res.status(403).json({ message: "User is blocked by admin" });
       }
-    }else{
-        res.status(403).json({message:'Email is not verified'})
+    } else {
+      res.status(403).json({ message: "Email is not verified" });
     }
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: "Internal server error" });
   }
 };
-export const getUserDetails = async(req,res)=>{
-    try {
-        const {id} = req.params;
-        const userData = await User.findOne({_id:id})
-        res.status(200).json({userData})
-    } catch (error) {
-        console.log(error.message);
-        return res.status(500).json({message:'Internal server error'})
-    }
-}
+export const getUserDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userData = await User.findOne({ _id: id });
+    res.status(200).json({ userData });
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 export const google = async (req, res) => {
   try {
@@ -225,17 +227,18 @@ export const google = async (req, res) => {
       const { password, ...userData } = user._doc;
 
       res.status(200).json({ user: userData, token });
-      
     } else {
       const generatedPassword = Math.random().toString(36).slice(-8);
       const hashedPassword = await securePassword(generatedPassword);
 
       const newUser = new User({
-        name: displayName.split(" ").join("").toLowerCase() + Math.random().toString(36).slice(-4),
+        name:
+          displayName.split(" ").join("").toLowerCase() +
+          Math.random().toString(36).slice(-4),
         email: email,
         password: hashedPassword,
         profileImage: photoURL,
-        isEmailVerified:true
+        isEmailVerified: true,
       });
 
       await newUser.save();
@@ -243,26 +246,28 @@ export const google = async (req, res) => {
       const token = jwt.sign({ id: newUser._id }, process.env.USER_JWT_KEY);
       const { password, ...userData } = newUser._doc;
 
-      return res.status(200).json({ user: userData, token, message: 'User created successfully.' });
+      return res
+        .status(200)
+        .json({ user: userData, token, message: "User created successfully." });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
- export const vendorList = async (req,res)=>{
+export const vendorList = async (req, res) => {
   try {
     const vendor = await Vendor.aggregate([
       {
         $lookup: {
-          from: 'studios', // The name of the Studio collection
-          localField: '_id',
-          foreignField: 'vendorId',
-          as: 'studioInfo',
+          from: "studios", // The name of the Studio collection
+          localField: "_id",
+          foreignField: "vendorId",
+          as: "studioInfo",
         },
       },
       {
-        $unwind: '$studioInfo',
+        $unwind: "$studioInfo",
       },
       {
         $project: {
@@ -273,63 +278,168 @@ export const google = async (req, res) => {
           isBlocked: 1,
           isVerified: 1,
           studioInfo: {
-            _id: '$studioInfo._id',
-            studioName: '$studioInfo.studioName',
-            city: '$studioInfo.city',
-            description: '$studioInfo.description',
-            coverImage: '$studioInfo.coverImage',
-            galleryImages: '$studioInfo.galleryImages',
+            _id: "$studioInfo._id",
+            studioName: "$studioInfo.studioName",
+            city: "$studioInfo.city",
+            description: "$studioInfo.description",
+            coverImage: "$studioInfo.coverImage",
+            galleryImages: "$studioInfo.galleryImages",
           },
         },
       },
     ]).exec();
     return res.status(200).json(vendor);
   } catch (error) {
-    console.log(error.message)
+    console.log(error.message);
   }
- }
+};
 
- export const singleStudio = async(req,res)=>{
+//  export const studioList = async (req, res) => {
+//   try {
+//     const { catId } = req.query;
+//     let query = {};
+
+//     if (catId && catId.length > 0) {
+//       const catIds = catId.split(',');
+//       query = { _id: { $in: catIds } };
+//     }
+
+//     const studios = await Studio.find(query);
+
+//     if (studios.length === 0) {
+//       return res.status(404).json([]);
+//     }
+
+//     return res.status(200).json(studios);
+//   } catch (error) {
+//     console.error(error.message);
+//     return res.status(500).json({ message: 'Internal Server Error' });
+//   }
+// };
+
+export const studioList = async (req, res) => {
   try {
-    const {vendorId} = req.params;
-    const studio = await Studio.findOne({ vendorId: vendorId }).populate('vendorId');
-    return res.status(200).json(studio)
+    let { catId, page = 1, pageSize = 4 } = req.query;
+    page = Number(page);
+    pageSize = Number(pageSize);
+
+    let query = {};
+    if (catId && catId.length > 0) {
+      const catIds = catId.split(",");
+      query = { _id: { $in: catIds } };
+    }
+    const totalCount = await Studio.countDocuments(query);
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    if (page > totalPages) {
+      return res.status(404).json({ message: "Page not found" });
+    }
+    const skip = (page - 1) * pageSize;
+    const studios = await Studio.find(query).skip(skip).limit(pageSize);
+    const nextPage = page < totalPages ? page + 1 : null;
+
+    if (studios.length === 0) {
+      return res.status(404).json([]);
+    }
+
+    return res.status(200).json({
+      studios,
+      page,
+      totalPages,
+      nextPage,
+    });
   } catch (error) {
-    console.log(error) 
-  } 
- }  
+    console.error(error.message); // Log error message
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 
-
-
- export const updateProfileImage = async (req, res) => {
+export const singleStudio = async (req, res) => {
   try {
-    const {_id, img } = req.body;
-    console.log(_id)
+    const { id } = req.params;
+    const studio = await Studio.findById({ _id: id });
+    return res.status(200).json(studio);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const updateProfileImage = async (req, res) => {
+  try {
+    const { _id, img } = req.body;
     // Validate request body
-    if (!img||!_id) {
+    if (!img || !_id) {
       return res.status(400).json({ message: "Invalid request body" });
     }
-  
-    const photoResult = await cloudinary.uploader.upload(img, { folder: 'userphoto' });
+
+    const photoResult = await cloudinary.uploader.upload(img, {
+      folder: "userphoto",
+    });
     const user = await User.findByIdAndUpdate(
-        _id,
-        { $set: { profileImage: photoResult.secure_url } },
-        { new: true }
+      _id,
+      { $set: { profileImage: photoResult.secure_url } },
+      { new: true }
     );
-     console.log(user,'usrennnnnnn')
     if (!user) {
-        return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
-   return res.status(200).json({ message: "Profile picture updated successfully", user });
-    
-
-   
+    return res
+      .status(200)
+      .json({ message: "Profile picture updated successfully", user });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
 
+export const getCategories = async (req, res) => {
+  try {
+    const categories = await Category.find().populate("subcategories").exec();
+    res.status(200).json(categories);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
+export const filterCategories = async (req, res) => {
+  try {
+    const { name, searchTerm } = req.query;
+    console.log(searchTerm, typeof searchTerm, "searchTerm");
+
+    let query = {};
+
+    if (name && name !== 'All categories') {
+      // If category is selected, use $and
+      query = {
+        $and: [
+          { categories: name },
+          {
+            $or: [
+              { studioName: { $regex: searchTerm, $options: "i" } },
+              { city: { $regex: searchTerm, $options: "i" } },
+            ],
+          },
+        ],
+      };
+    } else {
+      // If no category is selected or 'All categories' is selected, fetch all studios
+      query = {
+        $or: [
+          { studioName: { $regex: searchTerm, $options: "i" } },
+          { city: { $regex: searchTerm, $options: "i" } },
+        ],
+      };
+    }
+
+    const studio = await Studio.find(query);
+
+    res.json(studio);
+    console.log(studio.length, "studios");
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 

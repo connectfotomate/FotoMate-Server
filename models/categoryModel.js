@@ -9,13 +9,13 @@ const categorySchema = new mongoose.Schema({
   description: {
     type: String,
   },
-  unilist:{
+  unlist:{
     type:Boolean,
     default:false
   },
   subcategories: [
     {
-      type: mongoose.Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId, 
       ref: 'Subcategory',
     },
   ],

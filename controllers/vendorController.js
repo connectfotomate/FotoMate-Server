@@ -7,6 +7,7 @@ import bycrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import cloudinary from "../util/cloudinary.js";
 import { Buffer } from "buffer";
+import PhotographyPackage from "../models/packageModel.js";
 
 export const vendorSignup = async (req, res) => {
   let otpId;
@@ -90,7 +91,7 @@ export const vendorLoginVerify = async (req, res) => {
   try {
     const { email, password } = req.body;
     const vendor = await Vendor.findOne({ email: email });
-    const studio = await Studio.findOne({vendorId:vendor._id})
+    const studio = await Studio.findOne({ vendorId: vendor._id });
 
     if (!vendor) {
       return res.status(401).json({ message: "Vendor not registered" });
@@ -117,7 +118,12 @@ export const vendorLoginVerify = async (req, res) => {
           const { password, ...vendorWithoutPassword } = vendor.toObject();
           res
             .status(200)
-            .json({ vendor:vendorWithoutPassword,studio, token, message: `Welcome ${vendor.name}` });
+            .json({
+              vendor: vendorWithoutPassword,
+              studio,
+              token,
+              message: `Welcome ${vendor.name}`,
+            });
         } else {
           return res.status(403).json({ message: "Incorrect Password" });
         }
@@ -141,8 +147,8 @@ export const createStudio = async (req, res) => {
       coverImage,
       description,
       vendorId,
+      selectedCat,
     } = req.body;
-     console.log(galleryImages,'gaalery')
     const uploadGalleryImages = await galleryImages.map((image) => {
       return cloudinary.uploader.upload(image, {
         folder: "GalleryImages",
@@ -158,6 +164,7 @@ export const createStudio = async (req, res) => {
       galleryImages: galleryImage,
       coverImage,
       city: location,
+      categories: selectedCat,
     });
 
     res.status(201).json({ message: "Studio added successfully" });
@@ -171,17 +178,81 @@ export const createStudio = async (req, res) => {
 };
 
 export const vendorStudio = async (req, res) => {
-    try {
-      const { vendorId } = req.params;
-      const studio = await Studio.findOne({ vendorId: vendorId });
-      if (!studio) {
-        return res.status(404).json({ error: 'Studio not found' });
-      }
-  
-      res.status(200).json({ studio });
-    } catch (error) {   
-      console.error(error.message);
-      res.status(500).json({ error: 'Internal Server Error' });
+  try {
+    const { vendorId } = req.params;
+    const studio = await Studio.findOne({ vendorId: vendorId });
+
+    if (!studio) {
+      return res.status(404).json({ error: "Studio not found" });
     }
-  };
+    if (studio.isBlocked) {
+      return res.status(403).json({ error: "Studio is blocked" });
+    }
+
+    res.status(200).json({ studio });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const updateCoverImage = async (req, res) => {
+  try {
+    const { _id, image } = req.body;
+    const photoResult = await cloudinary.uploader.upload(image, {
+      folder: "coverImage",
+    });
+    const result = await Studio.findByIdAndUpdate(_id, {
+      $set: { coverImage: photoResult.secure_url },
+    });
+    res.status(201).json(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const addPackage = async (req, res) => {
+  try {
+    let {
+      packageName,
+      description,
+      selectedCat,
+      services,
+      packageImage,
+      vendorId
+    } = req.body;
+    let categoryName = selectedCat[0].name;
   
+    const photoResult = await cloudinary.uploader.upload(packageImage, {
+      folder: "packageImage",
+    });
+    console.log(photoResult)
+    const servicesInstance = services.map((service) => ({ serviceName: service.serviceName, price: service.price }));
+
+    console.log(servicesInstance,'servicesInsatnce')
+    const createdPackage = await PhotographyPackage.create({
+      name: packageName, 
+      description,
+      services: servicesInstance,
+      category: categoryName,
+      image: photoResult.secure_url,
+      vendorId 
+    }); 
+  
+      res.status(201).json({ message: "Package created successfully", createdPackage });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+const getPackages = async(req,res)=>{
+  try {
+    const packages = await PhotographyPackage(find)
+  } catch (error) {
+    console.log(error.message)
+    res.status(500).json({message:'Internal server error'})
+  }
+}
