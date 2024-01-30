@@ -2,6 +2,9 @@ import express from "express";
 import {
   addPackage,
   createStudio,
+  editStudio,
+  getBooking,
+  getPackages,
   updateCoverImage,
   vendorEmailVerify,
   vendorLoginVerify,
@@ -20,6 +23,8 @@ vendorRoute.post("/addStudio", createStudio);
 vendorRoute.get("/studio/:vendorId", vendorStudio);
 vendorRoute.patch('/studio',updateCoverImage)
 vendorRoute.post('/addPackage',addPackage)
-vendorRoute.get('/getPackages',)
+vendorRoute.get('/getPackages',getPackages)
+vendorRoute.patch('/editStudio',editStudio)
+vendorRoute.get('/getBooking',getBooking)
 
 export default vendorRoute;

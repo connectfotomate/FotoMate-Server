@@ -10,10 +10,14 @@ const studioSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  city: {
+  city:{
     type: String,
     required: true,
   },
+  cities: [{
+    type: String,
+    required: true,
+  }],
   description:{
     type:String,
     

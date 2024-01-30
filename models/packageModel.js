@@ -13,6 +13,11 @@ const serviceSchema = new mongoose.Schema({
 const photographyPackageSchema = new mongoose.Schema({
   vendorId: {
     type: mongoose.Types.ObjectId,
+    ref: "Vendor", // Reference to the Vendor model
+    required: true,
+  },
+  studioId: {
+    type: mongoose.Types.ObjectId,
     ref: "Studio", // Reference to the Studio model
     required: true,
   },

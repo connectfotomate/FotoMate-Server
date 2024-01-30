@@ -14,13 +14,16 @@ import {
   getCategories,
   filterCategories,
   studioList,
+  getPackages,
+  bookPackage,
+  getBooking,
+  payment,
 } from "../controllers/userController.js";
 import { userTokenVerify } from '../middlewares/authVerify.js'
-import { createStudio } from "../controllers/vendorController.js";
 import {uploadOptions} from '../config/multer.js'
 const userRoute = express();  
 
-userRoute.post("/signup", userSignup);
+userRoute.post("/signup", userSignup); 
 
 userRoute.post("/otp", emailOtpVerification);
 userRoute.post("/resendOtp", resendOtp);
@@ -36,7 +39,11 @@ userRoute.get('/userDetails/:id', getUserDetails);
 userRoute.get('/categoryDetails',getCategories)
 userRoute.get('/filterCat',filterCategories)
 userRoute.get('/studioList',studioList)
-
+userRoute.get('/getStudioPackages',getPackages)
+userRoute.post('/bookPackage',bookPackage)
+userRoute.post("/create-checkout-session",payment);
+userRoute.get('/getBooking',getBooking)
+ 
 
 
 

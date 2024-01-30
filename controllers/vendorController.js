@@ -8,12 +8,14 @@ import jwt from "jsonwebtoken";
 import cloudinary from "../util/cloudinary.js";
 import { Buffer } from "buffer";
 import PhotographyPackage from "../models/packageModel.js";
+import Booking from "../models/bookingModel.js";
 
 export const vendorSignup = async (req, res) => {
   let otpId;
   try {
     const { name, email, mobile, password } = req.body;
-    const hashedPassword = await securePassword(password);
+    console.log(req.body,'body vendor signup')
+    const hashedPassword = await securePassword(password); 
     const emailExist = await Vendor.findOne({ email: email });
     if (emailExist) {
       return res
@@ -69,8 +71,8 @@ export const vendorEmailVerify = async (req, res) => {
     console.log(error.message);
     res.status(500).json({ status: "Internal Server Error" });
   }
-};
-
+}; 
+ 
 export const vendorResendOtp = async (req, res) => {
   try {
     const { vendorEmail } = req.body;
@@ -116,14 +118,12 @@ export const vendorLoginVerify = async (req, res) => {
             }
           );
           const { password, ...vendorWithoutPassword } = vendor.toObject();
-          res
-            .status(200)
-            .json({
-              vendor: vendorWithoutPassword,
-              studio,
-              token,
-              message: `Welcome ${vendor.name}`,
-            });
+          res.status(200).json({
+            vendor: vendorWithoutPassword,
+            studio,
+            token,
+            message: `Welcome ${vendor.name}`,
+          });
         } else {
           return res.status(403).json({ message: "Incorrect Password" });
         }
@@ -142,13 +142,15 @@ export const createStudio = async (req, res) => {
   try {
     let {
       studioName,
-      location,
       galleryImages,
       coverImage,
       description,
+      location,
       vendorId,
       selectedCat,
+      cities
     } = req.body;
+    console.log(cities,'cities')
     const uploadGalleryImages = await galleryImages.map((image) => {
       return cloudinary.uploader.upload(image, {
         folder: "GalleryImages",
@@ -163,7 +165,8 @@ export const createStudio = async (req, res) => {
       description,
       galleryImages: galleryImage,
       coverImage,
-      city: location,
+      city:location,
+      cities:cities.map((city)=>city.cityName),
       categories: selectedCat,
     });
 
@@ -220,39 +223,90 @@ export const addPackage = async (req, res) => {
       selectedCat,
       services,
       packageImage,
-      vendorId
+      vendorId,
     } = req.body;
     let categoryName = selectedCat[0].name;
-  
+    const studio = await Studio.findOne({ vendorId: vendorId });
+    const studioId = studio._id;
+
     const photoResult = await cloudinary.uploader.upload(packageImage, {
       folder: "packageImage",
     });
-    console.log(photoResult)
-    const servicesInstance = services.map((service) => ({ serviceName: service.serviceName, price: service.price }));
+    const servicesInstance = services.map((service) => ({
+      serviceName: service.serviceName,
+      price: service.price,
+    }));
 
-    console.log(servicesInstance,'servicesInsatnce')
     const createdPackage = await PhotographyPackage.create({
-      name: packageName, 
+      name: packageName,
       description,
       services: servicesInstance,
       category: categoryName,
       image: photoResult.secure_url,
-      vendorId 
-    }); 
-  
-      res.status(201).json({ message: "Package created successfully", createdPackage });
+      vendorId,
+      studioId,
+    });
+
+    res
+      .status(201)
+      .json({ message: "Package created successfully", createdPackage });
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-
-const getPackages = async(req,res)=>{
+export const getPackages = async (req, res) => {
   try {
-    const packages = await PhotographyPackage(find)
+    const { vendorId } = req.query;
+    const packages = await PhotographyPackage.find({ vendorId: vendorId });
+
+    res.status(200).json(packages);
   } catch (error) {
-    console.log(error.message)
-    res.status(500).json({message:'Internal server error'})
+    console.log(error.message);
+    res.status(500).json({ message: "Internal server error" }); 
   }
-}
+}; 
+
+export const editStudio = async (req, res) => {
+  try {
+    const { studioId, studioName, location, description, selectedCat } =
+      req.body;
+    const updatedStudio = await Studio.findByIdAndUpdate(
+      { _id: studioId },
+      {
+        $set: {
+          studioName: studioName,
+          description: description,
+          city:location,
+          categories: selectedCat.map((category) => category.name),
+        },
+      },
+      { new: true }
+    );
+    return res
+      .status(201)
+      .json({ message: "Studio Edited Successfully", updatedStudio });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const getBooking = async (req, res) => {
+  try {
+    const { vendorId } = req.query; 
+    const bookingData = await Booking.find({ vendorId: vendorId })
+    .populate({
+      path:  'packageId', 
+      model: 'PhotographyPackage'
+    }).populate({
+      path: 'userId',
+      model:'User'
+    });
+    res.status(200).json({message:"Booking data fetched succesfully",bookingData})
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({message:"Internal server error"})
+  }
+};

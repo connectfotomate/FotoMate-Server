@@ -6,6 +6,7 @@ import Subcategory from "../models/subCategoryModel.js";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import cloudinary from "../util/cloudinary.js";
+import Booking from "../models/bookingModel.js";
 dotenv.config();
 
 export const adminLogin = async (req, res) => {
@@ -253,4 +254,24 @@ export const unlistCategory = async(req,res)=>{
     console.log(error.message)
     res.status(500).json({message:"Internal server error"}) 
   } 
+}
+
+export const getBookingList = async (req,res)=>{
+  try {
+    const bookingList = await Booking.find()
+    .populate({
+      path:  'packageId', 
+      model: 'PhotographyPackage'
+    }).populate({
+      path: 'studioId',
+      model:'Studio'
+    }).populate({
+      path: 'userId',
+      model:'User'
+    });;
+    res.status(200).json({message:'Booking list fetched successfully',bookingList})
+  } catch (error) {
+    console.log(error.message)
+    res.status(500).json({message:"Internal server error"})
+  }
 }

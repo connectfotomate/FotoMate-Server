@@ -8,6 +8,7 @@ import {
   blockVendor,
   categoryList,
   editCategory,
+  getBookingList,
   singleCategory,
   subcategory,
   unlistCategory,
@@ -29,4 +30,5 @@ adminRoute.post("/addSubCategory", addSubCategory);
 adminRoute.get("/singleCategory/:cat_id", singleCategory);
 adminRoute.get("/categoryList", categoryList);
 adminRoute.get("/subcategory/:cat_id", subcategory);
+adminRoute.get('/bookingList',getBookingList)
 export default adminRoute;

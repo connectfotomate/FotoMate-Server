@@ -10,12 +10,17 @@ import dotenv from "dotenv";
 import Otp from "../models/otpModel.js";
 import cloudinary from "../util/cloudinary.js";
 import Category from "../models/categoryModel.js";
+import PhotographyPackage from "../models/packageModel.js";
+import Booking from "../models/bookingModel.js";
+import Stripe from 'stripe'
 dotenv.config();
 let otpId;
+const stripe =  Stripe(process.env.STRIPE_API_KE)
 
 export const userSignup = async (req, res) => {
   try {
     const { name, email, mobile, password } = req.body;
+    console.log(req.body,'signup body')
     const hashedPassword = await securePassword(password);
     const emailExist = await User.findOne({ email: email });
     if (emailExist) {
@@ -255,6 +260,7 @@ export const google = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 export const vendorList = async (req, res) => {
   try {
     const vendor = await Vendor.aggregate([
@@ -280,7 +286,7 @@ export const vendorList = async (req, res) => {
           studioInfo: {
             _id: "$studioInfo._id",
             studioName: "$studioInfo.studioName",
-            city: "$studioInfo.city",
+            city: "$studioInfo.cities",
             description: "$studioInfo.description",
             coverImage: "$studioInfo.coverImage",
             galleryImages: "$studioInfo.galleryImages",
@@ -360,7 +366,7 @@ export const singleStudio = async (req, res) => {
     const studio = await Studio.findById({ _id: id });
     return res.status(200).json(studio);
   } catch (error) {
-    console.log(error);
+    console.log(error.message);
   }
 };
 
@@ -378,7 +384,7 @@ export const updateProfileImage = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       _id,
       { $set: { profileImage: photoResult.secure_url } },
-      { new: true }
+      { new: true } 
     );
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -400,13 +406,12 @@ export const getCategories = async (req, res) => {
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: "Internal server error" });
-  }
+  } 
 };
 
 export const filterCategories = async (req, res) => {
   try {
     const { name, searchTerm } = req.query;
-    console.log(searchTerm, typeof searchTerm, "searchTerm");
 
     let query = {};
 
@@ -418,7 +423,7 @@ export const filterCategories = async (req, res) => {
           {
             $or: [
               { studioName: { $regex: searchTerm, $options: "i" } },
-              { city: { $regex: searchTerm, $options: "i" } },
+              { city: { $in: [searchTerm] } },
             ],
           },
         ],
@@ -432,14 +437,109 @@ export const filterCategories = async (req, res) => {
         ],
       };
     }
-
+ 
     const studio = await Studio.find(query);
 
     res.json(studio);
-    console.log(studio.length, "studios");
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
+export const getPackages = async (req,res)=>{
+  try {
+    const {id} = req.query;
+    const packages = await PhotographyPackage.find({studioId:id})
+    res.status(200).json(packages)
+  } catch (error) {
+    console.log(error.message)
+    res.status(500).json({message:'Internal server Error'})
+  }
+}
+
+export const bookPackage = async (req, res) => {
+  try {
+    const { date, place, packageId, userId } = req.body;
+    const packageData = await PhotographyPackage.findById(packageId);
+
+    // Calculate total amount
+    const totalAmount = packageData.services.reduce((total, service) => total + service.price, 0);
+
+    // Calculate advance amount (20% of total amount)
+    const advanceAmount = totalAmount * 0.2;
+
+    // Create a new booking
+    const booking = new Booking({
+      vendorId: packageData.vendorId,
+      studioId: packageData.studioId,
+      packageId: packageId,
+      userId: userId,
+      eventDate: date,
+      location: place,
+      category: packageData.category,
+      advanceAmount: advanceAmount,
+      totalAmount: totalAmount,
+      
+    });
+
+    // Save the booking to the database
+    const savedBooking = await booking.save();
+
+    res.status(200).json(savedBooking);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+export const getBooking = async (req,res)=>{
+  try {
+    const {userId} = req.query;
+    const bookingData = await Booking.find({ userId:userId })
+      .populate({
+        path:  'packageId',
+        model: 'PhotographyPackage'
+      });
+    res.status(200).json(bookingData);
+  } catch (error) {
+    console.log(error.message)
+    res.status(500).json({message:'Internal server Error'})
+  }
+}
+
+export const payment = async (req, res) => {
+  
+  try {
+    console.log('working')
+    const {packageData} = req.body;
+    const advance = packageData.advanceAmount
+    console.log(packageData,'data')
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items : [
+        {
+          price_data: {
+            currency: 'inr',
+            product_data: {
+              name: 'Amount',
+            },
+            unit_amount: advance*100,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `http://localhost:5173/success`,
+      cancel_url: `http://localhost:5173/cancel`,
+    });
+
+    res.json({ id: session.id });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: 'An error occurred while creating the session.' });
+  }
+};
+
+ 
