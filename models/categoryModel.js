@@ -9,7 +9,7 @@ const categorySchema = new mongoose.Schema({
   description: {
     type: String,
   },
-  unlist:{
+  unlist:{ 
     type:Boolean,
     default:false
   },

@@ -30,6 +30,22 @@ const vendorSchema = new mongoose.Schema({
     image: {
         type: String,
     },
+    walletHistory:[{
+        date:{
+          type: Date
+        },
+        amount:{
+            type: Number
+        },
+        from:{
+            type: String
+        },
+    },
+],
+wallet:{
+    type: Number,
+    default: 0,
+},
    
 }, { timestamps: true });
 

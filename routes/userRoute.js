@@ -18,9 +18,11 @@ import {
   bookPackage,
   getBooking,
   payment,
+  getCheckoutPackage,
 } from "../controllers/userController.js";
 import { userTokenVerify } from '../middlewares/authVerify.js'
 import {uploadOptions} from '../config/multer.js'
+import { vendorData } from "../controllers/chatController.js";
 const userRoute = express();  
 
 userRoute.post("/signup", userSignup); 
@@ -40,9 +42,10 @@ userRoute.get('/categoryDetails',getCategories)
 userRoute.get('/filterCat',filterCategories)
 userRoute.get('/studioList',studioList)
 userRoute.get('/getStudioPackages',getPackages)
-userRoute.post('/bookPackage',bookPackage)
+userRoute.post('/bookPackage',bookPackage) 
 userRoute.post("/create-checkout-session",payment);
 userRoute.get('/getBooking',getBooking)
+userRoute.get('/getCheckoutPackage',getCheckoutPackage)
  
 
 

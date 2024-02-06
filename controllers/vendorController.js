@@ -14,7 +14,6 @@ export const vendorSignup = async (req, res) => {
   let otpId;
   try {
     const { name, email, mobile, password } = req.body;
-    console.log(req.body,'body vendor signup')
     const hashedPassword = await securePassword(password); 
     const emailExist = await Vendor.findOne({ email: email });
     if (emailExist) {
@@ -150,7 +149,6 @@ export const createStudio = async (req, res) => {
       selectedCat,
       cities
     } = req.body;
-    console.log(cities,'cities')
     const uploadGalleryImages = await galleryImages.map((image) => {
       return cloudinary.uploader.upload(image, {
         folder: "GalleryImages",
@@ -215,7 +213,7 @@ export const updateCoverImage = async (req, res) => {
   }
 };
 
-export const addPackage = async (req, res) => {
+export const addPackage = async (req, res) => { 
   try {
     let {
       packageName,

@@ -42,9 +42,14 @@ const bookingSchema  = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    workStatus:{
+    isPaid: {
         type: Boolean,
-        default:false,
+        default: false,
+        required: true,
+    },
+    workStatus:{
+        type: String,
+        default:'pending',
         required: true
     },
     isCancelled:{
