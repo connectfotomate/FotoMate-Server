@@ -15,13 +15,9 @@ const server = createServer(app);
 
 const PORT = 3000;
 
-app.use(
-  cors({
-    origin: 'https://fotomate.vercel.app',
-    methods: ['GET', 'POST', 'PUT', 'PATCH'],
-    credentials: true,    
-  })
-);
+app.use(cors({ 
+  credentials:true
+ }));
 
 dbconnect();
 app.use(express.json({ limit: '50mb' }));

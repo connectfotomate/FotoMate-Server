@@ -5,8 +5,7 @@ import { Server } from 'socket.io';
 const setupSocketIO = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: 'https://fotomate.vercel.app',
-      methods: ["GET", "POST"],
+       credentials:true,
     }
   });
   
