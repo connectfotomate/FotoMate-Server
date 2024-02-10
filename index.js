@@ -17,9 +17,9 @@ const PORT = 3000;
 
 app.use(
   cors({
-    origin: 'http://localhost:5173',
+    origin: 'https://fotomate.vercel.app/',
     methods: ['GET', 'POST', 'PUT', 'PATCH'],
-    credentials: true,
+    credentials: true,    
   })
 );
 
