@@ -120,7 +120,7 @@ export const forgotPassword = async (req, res) => {
       from: process.env.EMAIL_USER,
       to: userEmail,
       subject: "Forgot password",
-      text: `http://localhost:5173/resetPassword/${oldUser._id}/${token}`,
+      text: `https://fotomate.vercel.app/resetPassword/${oldUser._id}/${token}`,
     };
 
     transporter.sendMail(mailOptions, function (error, info) {
@@ -540,8 +540,8 @@ export const payment = async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: `http://localhost:5173/success`,
-      cancel_url: `http://localhost:5173/cancel`,
+      success_url: `https://fotomate.vercel.app/success`,
+      cancel_url: `https://fotomate.vercel.app/cancel`,
     });
 
     //  Creating chat after payment
