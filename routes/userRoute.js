@@ -19,6 +19,7 @@ import {
   getBooking,
   payment,
   getCheckoutPackage,
+  cancelBooking,
 } from "../controllers/userController.js";
 import { userTokenVerify } from '../middlewares/authVerify.js'
 import {uploadOptions} from '../config/multer.js'
@@ -46,6 +47,7 @@ userRoute.post('/bookPackage',bookPackage)
 userRoute.post("/create-checkout-session",payment);
 userRoute.get('/getBooking',getBooking)
 userRoute.get('/getCheckoutPackage',getCheckoutPackage)
+userRoute.post('/cancelBooking',cancelBooking)
  
 
 

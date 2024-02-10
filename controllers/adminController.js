@@ -145,7 +145,7 @@ export const blockStudio = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
-  } 
+  }
 };
 
 export const addCategory = async (req, res) => {
@@ -159,7 +159,7 @@ export const addCategory = async (req, res) => {
     const categoryData = await category.save();
     res.status(201).json({ category: categoryData });
   } catch (error) {
-    console.log(error); 
+    console.log(error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -182,96 +182,167 @@ export const singleCategory = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
- export const editCategory = async (req,res)=>{
+export const editCategory = async (req, res) => {
   try {
-    const {cat_id,name,description} = req.body;
-    const  category = await Category.findByIdAndUpdate({_id:cat_id},{$set:{
-      name:name,description:description
-    }},
-    {new:true}
+    const { cat_id, name, description } = req.body;
+    const category = await Category.findByIdAndUpdate(
+      { _id: cat_id },
+      {
+        $set: {
+          name: name,
+          description: description,
+        },
+      },
+      { new: true }
     );
-    res.status(201).json({message:'Category Edited Successfully'})
-
+    res.status(201).json({ message: "Category Edited Successfully" });
   } catch (error) {
     if (error.code === 11000 && error.keyPattern && error.keyPattern.name) {
       // Handle duplicate key error for the 'name' field
-      return res.status(400).json({ message: 'Category name already exists' });
+      return res.status(400).json({ message: "Category name already exists" });
     }
-    console.log(error.message) 
-    res.status(500).json({message:'Internal Server error'})
+    console.log(error.message);
+    res.status(500).json({ message: "Internal Server error" });
   }
- }
+};
 
 export const addSubCategory = async (req, res) => {
   try {
-    const {id,values,baseImage} = req.body.cat_id;
-    const {name,description} = values
-    const image = await cloudinary.uploader.upload(baseImage,{folder:'sub_category_img'})
+    const { id, values, baseImage } = req.body.cat_id;
+    const { name, description } = values;
+    const image = await cloudinary.uploader.upload(baseImage, {
+      folder: "sub_category_img",
+    });
     const subCategory = new Subcategory({
       name: name,
-      image:image.secure_url,
-      description: description, 
-      categoryId:id
+      image: image.secure_url,
+      description: description,
+      categoryId: id,
     });
-    await subCategory.save();  
+    await subCategory.save();
 
     //update the category array with subcategory
-   const parentCategory = await Category.findById({_id:id})
-   parentCategory.subcategories.push(subCategory._id)
-   await parentCategory.save()
+    const parentCategory = await Category.findById({ _id: id });
+    parentCategory.subcategories.push(subCategory._id);
+    await parentCategory.save();
 
-    res.status(200).json({subCategory,parentCategory});
+    res.status(200).json({ subCategory, parentCategory });
   } catch (error) {
     console.log(error.message);
   }
-}; 
-export const subcategory = async(req,res)=>{
+};
+export const subcategory = async (req, res) => {
   try {
-    const {cat_id} = req.params;
-    const subcategory = await Subcategory.find({categoryId:cat_id})
-    res.status(200).json(subcategory)
-  } catch (error) { 
-    console.log(error.message)
-    res.status(500).json({message:"Internal server error"})
+    const { cat_id } = req.params;
+    const subcategory = await Subcategory.find({ categoryId: cat_id });
+    res.status(200).json(subcategory);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 
-export const unlistCategory = async(req,res)=>{
+export const unlistCategory = async (req, res) => {
   try {
-    const {_id,status} = req.body;
-    
-    const updatedCategory = await Category.findByIdAndUpdate( 
-      {_id},
+    const { _id, status } = req.body;
+
+    const updatedCategory = await Category.findByIdAndUpdate(
+      { _id },
       { $set: { unlist: !status } },
-      { new: true } 
+      { new: true }
     );
     if (updatedCategory) {
-      res.status(200).json({ message: 'Category updated successfully', category: updatedCategory });
+      res
+        .status(200)
+        .json({
+          message: "Category updated successfully",
+          category: updatedCategory,
+        });
     } else {
-      res.status(404).json({ message: 'Category not found' }); 
+      res.status(404).json({ message: "Category not found" });
     }
   } catch (error) {
-    console.log(error.message)
-    res.status(500).json({message:"Internal server error"}) 
-  } 
-}
+    console.log(error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
-export const getBookingList = async (req,res)=>{
+export const getBookingList = async (req, res) => {
   try {
     const bookingList = await Booking.find()
-    .populate({
-      path:  'packageId', 
-      model: 'PhotographyPackage'
-    }).populate({
-      path: 'studioId',
-      model:'Studio'
-    }).populate({
-      path: 'userId',
-      model:'User'
-    });;
-    res.status(200).json({message:'Booking list fetched successfully',bookingList})
+      .populate({
+        path: "packageId",
+        model: "PhotographyPackage",
+      })
+      .populate({
+        path: "studioId",
+        model: "Studio",
+      })
+      .populate({
+        path: "userId",
+        model: "User",
+      });
+    res
+      .status(200)
+      .json({ message: "Booking list fetched successfully", bookingList });
   } catch (error) {
-    console.log(error.message)
-    res.status(500).json({message:"Internal server error"})
+    console.log(error.message);
+    res.status(500).json({ message: "Internal server error" });
   }
-}
+};
+
+// export const cancelBooking = async (req, res) => {
+//   try {
+//     console.log("working");
+//     const { reason, bookingId } = req.body;
+//     console.log(req.body);
+//     const booking = await Booking.findById(bookingId);
+//     console.log(booking, "booking");
+//     if (!bookingId) {
+//       return res.status(404).json({ error: "Booking not found " });
+//     }
+//     booking.isCancelled = true;
+//     booking.cancelReason = reason;
+//     booking.workStatus = "cancelled";
+//     await booking.save();
+//     res
+//       .status(200)
+//       .json({ message: "Booking cancelled successfully", booking });
+//   } catch (error) {
+//     console.log(error.message);
+//     res
+//       .status(500)
+//       .josn({ error: "An error occurred during cancelling booking" });
+//   }
+// };
+export const cancelBooking = async (req, res) => {
+  try {
+    console.log("working");
+    const { reason, bookingId } = req.body;
+    console.log(req.body);
+    const booking = await Booking.findById(bookingId);
+    console.log(booking, "booking");
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    // Refund the amount to user's wallet 
+    const user = await User.findById(booking.userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    user.wallet += booking.advanceAmount;
+    await user.save();
+
+    // Update booking status
+    booking.isCancelled = true;
+    booking.cancelReason = reason;
+    booking.workStatus = "cancelled";
+    await booking.save();
+
+    res.status(200).json({ message: "Booking cancelled successfully", booking });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ error: "An error occurred during cancelling booking" });
+  }
+};

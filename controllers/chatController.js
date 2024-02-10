@@ -20,7 +20,7 @@ export const userData = async (req,res) =>{
         const user = await User.find({_id:id})
 
         res.status(200).json(user) 
-    } catch (error) { 
+    } catch (error) {  
         console.log(error.message)
         res.status(500).json({ message: error.message })
     }
@@ -30,13 +30,23 @@ export const findChatByUserAndStudio = async(req,res)=> {
     try {
       const {id, vendorId} = req.query;
       const chat = await Chat.findOne({
-        user: id,
+        user: id, 
         studio: vendorId,
       }).populate('messages');  
       res.status(200).json(chat);
-    } catch (error) {
+    } catch (error) { 
       console.error('Error finding chat:', error);
       throw error;  
     }
-  }
+  }  
   
+  export const studioChatList = async(req,res)=>{ 
+    try {
+      const {id} = req.query;
+      const chatList = await Chat.find({studio:id}).populate('user')
+      res.status(200).json(chatList)
+    } catch (error) {
+      console.log(error.message)
+      res.status(500).json({message:'Internal server error'})
+    }
+  }      

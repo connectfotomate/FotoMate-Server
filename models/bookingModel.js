@@ -1,32 +1,31 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
 
-const bookingSchema  = new mongoose.Schema({
-    vendorId : {
+const bookingSchema = new mongoose.Schema({
+    vendorId: {
         type: mongoose.Types.ObjectId,
         ref: "Vendor",
-        required:true,
+        required: true,
     },
-    studioId :{
-        type : mongoose.Types.ObjectId,
+    studioId: {
+        type: mongoose.Types.ObjectId,
         ref: 'Studio',
-        required:true,
+        required: true,
     },
     userId: {
         type: mongoose.Types.ObjectId,
         ref: "User",
-        required:true,
+        required: true,
     },
-    packageId:{
+    packageId: {
         type: mongoose.Types.ObjectId,
         ref: 'PhotographyPackage',
         required: true,
     },
-    eventDate
-     :{
-        type : Date,
+    eventDate: {
+        type: Date,
         required: true,
     },
-    location:{
+    location: {
         type: String,
         required: true,
     },
@@ -38,7 +37,7 @@ const bookingSchema  = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    totalAmount:{
+    totalAmount: {
         type: Number,
         required: true,
     },
@@ -47,20 +46,21 @@ const bookingSchema  = new mongoose.Schema({
         default: false,
         required: true,
     },
-    workStatus:{
+    workStatus: {
         type: String,
-        default:'pending',
+        default: 'pending',
         required: true
     },
-    isCancelled:{
+    isCancelled: {
         type: Boolean,
-        default:false,
-        required:true,
+        default: false,
+        required: true,
     },
+    cancelReason: {
+        type: String, // Assuming the cancel reason is a string
+    }
 });
 
-const Booking = mongoose.model(
-    "Booking",
-    bookingSchema
-)
+const Booking = mongoose.model("Booking", bookingSchema);
+
 export default Booking;

@@ -325,7 +325,7 @@ export const vendorList = async (req, res) => {
 
 export const studioList = async (req, res) => {
   try {
-    let { catId, page = 1, pageSize = 4 } = req.query;
+    let { catId, page = 1, pageSize = 8 } = req.query;
     page = Number(page);
     pageSize = Number(pageSize);
 
@@ -406,7 +406,7 @@ export const getCategories = async (req, res) => {
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: "Internal server error" });
-  }
+  }     
 };
 
 export const filterCategories = async (req, res) => {
@@ -428,16 +428,15 @@ export const filterCategories = async (req, res) => {
           },
         ],
       };
-    } else {
+    } else { 
       // If no category is selected or 'All categories' is selected, fetch all studios
       query = {
         $or: [
           { studioName: { $regex: searchTerm, $options: "i" } },
           { city: { $regex: searchTerm, $options: "i" } },
         ],
-      };
-    }
-
+      };  
+    }  
     const studio = await Studio.find(query);
 
     res.json(studio);
@@ -497,11 +496,12 @@ export const bookPackage = async (req, res) => {
 export const getBooking = async (req, res) => {
   try {
     const { userId } = req.query;
+    const user = await User.findById(userId)
     const bookingData = await Booking.find({ userId: userId }).populate({
       path: "packageId",
       model: "PhotographyPackage",
     });
-    res.status(200).json(bookingData);
+    res.status(200).json({bookingData,user});
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: "Internal server Error" });
@@ -574,68 +574,35 @@ export const payment = async (req, res) => {
   }
 };
 
-// export const bookPackage = async (req, res) => {
-//   try {
-//     const { date, place, packageId, userId } = req.body;
-//     const packageData = await PhotographyPackage.findById(packageId);
 
-//     // Calculate total amount
-//     const totalAmount = packageData.services.reduce((total, service) => total + service.price, 0);
+export const cancelBooking = async (req, res) => {
+  try {
+    console.log("working");
+    const { reason, bookingId } = req.body;
+    console.log(req.body);
+    const booking = await Booking.findById(bookingId);
+    console.log(booking, "booking");
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
 
-//     // Calculate advance amount (20% of total amount)
-//     const advanceAmount = totalAmount * 0.2;
+    // Refund the amount to user's wallet 
+    const user = await User.findById(booking.userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    user.wallet += booking.advanceAmount;
+    await user.save();
 
-//     // Create a new booking
-//     const booking = new Booking({
-//       vendorId: packageData.vendorId,
-//       studioId: packageData.studioId,
-//       packageId: packageId,
-//       userId: userId,
-//       eventDate: date,
-//       location: place,
-//       category: packageData.category,
-//       advanceAmount: advanceAmount,
-//       totalAmount: totalAmount,
-//     });
+    // Update booking status
+    booking.isCancelled = true;
+    booking.cancelReason = reason;
+    booking.workStatus = "cancelled";
+    await booking.save();
 
-//     // Don't save the booking yet, just return it
-//     res.status(200).json({packageData,totalAmount,advanceAmount})
-//     return booking;
-//   } catch (error) {
-//     console.log(error.message);
-//     res.status(500).json({ message: 'Internal server error' });
-//   }
-// };
-
-// export const payment = async (req, res) => {
-//   try {
-//     const booking = await bookPackage(req, res);
-//     const advance = booking.advanceAmount;
-//     const session = await stripe.checkout.sessions.create({
-//       payment_method_types: ['card'],
-//       line_items : [
-//         {
-//           price_data: {
-//             currency: 'inr',
-//             product_data: {
-//               name: 'Amount',
-//             },
-//             unit_amount: advance*100,
-//           },
-//           quantity: 1,
-//         },
-//       ],
-//       mode: 'payment',
-//       success_url: `http://localhost:5173/success`,
-//       cancel_url: `http://localhost:5173/cancel`,
-//     });
-
-//     // Save the booking to the database after payment is successful
-//     const savedBooking = await booking.save();
-
-//     res.json({ id: session.id, savedBooking });
-//   } catch (error) {
-//     console.error(error.message);
-//     res.status(500).json({ error: 'An error occurred while creating the session.' });
-//   }
-// };
+    res.status(200).json({ message: "Booking cancelled successfully", booking });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ error: "An error occurred during cancelling booking" });
+  }
+};

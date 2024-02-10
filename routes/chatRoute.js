@@ -1,12 +1,11 @@
 import express from "express";
-import { vendorData, userData, findChatByUserAndStudio } from "../controllers/chatController.js";
+import { vendorData, userData, findChatByUserAndStudio, studioChatList } from "../controllers/chatController.js";
 
 const chatRouter = express.Router()
 
 chatRouter.get('/vendorData/:id',vendorData);
 chatRouter.get('/userData/:id',userData)
 // chatRouter.get('/chats',findChatByUserAndStudio) 
-// Assuming findChatByUserAndStudio is a middleware or route handler function
 
 chatRouter.get('/chats', (req, res, next) => {
     const { id, vendorId } = req.query;
@@ -14,6 +13,9 @@ chatRouter.get('/chats', (req, res, next) => {
 
     findChatByUserAndStudio(req, res, next, id, vendorId);
   });
+chatRouter.get('/chatList',(req,res,next)=>{
+  const {id} = req.query;
+  studioChatList(req,res,next,id)
+})
   
- 
 export default chatRouter;  

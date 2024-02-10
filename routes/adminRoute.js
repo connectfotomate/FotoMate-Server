@@ -6,6 +6,7 @@ import {
   blockStudio,
   blockUser,
   blockVendor,
+  cancelBooking,
   categoryList,
   editCategory,
   getBookingList,
@@ -31,4 +32,5 @@ adminRoute.get("/singleCategory/:cat_id", singleCategory);
 adminRoute.get("/categoryList", categoryList);
 adminRoute.get("/subcategory/:cat_id", subcategory);
 adminRoute.get('/bookingList',getBookingList)
+adminRoute.post('/cancelBooking',cancelBooking)
 export default adminRoute;
