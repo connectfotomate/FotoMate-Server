@@ -554,7 +554,7 @@ export const payment = async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: `https://fotomate.vercel.app/success`,
+      success_url: `https://fotomate.vercel.app/success?studioId=${studioId}`,
       cancel_url: `https://fotomate.vercel.app/cancel`,
       // success_url: `http://localhost:5173/success?studioId=${studioId}`,
       // cancel_url: `http://localhost:5173/cancel`,
