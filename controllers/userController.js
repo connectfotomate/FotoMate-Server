@@ -121,6 +121,7 @@ export const forgotPassword = async (req, res) => {
       to: userEmail,
       subject: "Forgot password",
       text: `https://fotomate.vercel.app/resetPassword/${oldUser._id}/${token}`,
+      // text: `http:localhost:5173/resetPassword/${oldUser._id}/${token}`,
     };
 
     transporter.sendMail(mailOptions, function (error, info) {
@@ -325,7 +326,7 @@ export const vendorList = async (req, res) => {
 
 export const studioList = async (req, res) => {
   try {
-    let { catId, page = 1, pageSize = 8 } = req.query;
+    let { catId, page = 1, pageSize = 4 } = req.query;
     page = Number(page);
     pageSize = Number(pageSize);
 
@@ -342,6 +343,12 @@ export const studioList = async (req, res) => {
     }
     const skip = (page - 1) * pageSize;
     const studios = await Studio.find(query).skip(skip).limit(pageSize);
+    studios.forEach(studio => {
+      studio.galleryImages = studio.galleryImages.map(imageUrl => {
+        // Replace the file extension with .webp
+        return imageUrl.replace(/\.jpg$/, ".webp");
+      });
+    });
     const nextPage = page < totalPages ? page + 1 : null;
 
     if (studios.length === 0) {
@@ -363,12 +370,19 @@ export const studioList = async (req, res) => {
 export const singleStudio = async (req, res) => {
   try {
     const { id } = req.params;
-    const studio = await Studio.findById({ _id: id });
+    const studio = await Studio.findById({ _id: id })
+      .populate({
+        path: 'review.postedBy',
+        model: User,
+        select: 'name profileImage' 
+      });
     return res.status(200).json(studio);
   } catch (error) {
     console.log(error.message);
   }
 };
+
+
 
 export const updateProfileImage = async (req, res) => {
   try {
@@ -521,7 +535,7 @@ export const getCheckoutPackage = async (req, res) => {
 export const payment = async (req, res) => {
   try {
     const { booking } = req.body;
-    const {vendorId,userId} = booking
+    const {vendorId,userId,studioId} = booking
     // console.log(req.body,'body')
     const advance = booking.advanceAmount;
     const bookingInstance = new Booking(booking);
@@ -542,6 +556,8 @@ export const payment = async (req, res) => {
       mode: "payment",
       success_url: `https://fotomate.vercel.app/success`,
       cancel_url: `https://fotomate.vercel.app/cancel`,
+      // success_url: `http://localhost:5173/success?studioId=${studioId}`,
+      // cancel_url: `http://localhost:5173/cancel`,
     });
 
     //  Creating chat after payment
@@ -606,3 +622,55 @@ export const cancelBooking = async (req, res) => {
     res.status(500).json({ error: "An error occurred during cancelling booking" });
   }
 };
+
+export const postReview = async (req, res) => {
+  try {
+    console.log(req.body,'body')
+    const { review, rating, userId, studioId } = req.body;
+    
+    console.log(typeof(rating),'rating')
+    // Find the studio by id
+    const studio = await Studio.findById(studioId);
+    console.log(studio,'studio')
+    if (!studio) {
+      return res.status(404).json({ error: "Studio not found" });  
+    }
+
+    // Check if a review by this user already exists
+    const existingReviewIndex = studio.review.findIndex(r => r.postedBy.toString() === userId);
+
+    if (existingReviewIndex !== -1) {
+      // Update the existing review
+      studio.review[existingReviewIndex].star =(rating);
+      studio.review[existingReviewIndex].userReview = review;
+      studio.review[existingReviewIndex].postedDate = new Date();
+    } else {
+      // Create a new review
+      const newReview = {
+        star: (rating),
+        userReview: review,
+        postedBy: userId,
+        postedDate: new Date(),
+      };
+
+      // Add the review to the studio's reviews
+      studio.review.push(newReview);
+    }
+
+    // Save the studio with the new or updated review
+    let totalRating = 0;
+    for(let i = 0; i < studio.review.length; i++) {
+      totalRating += studio.review[i].star;
+    }
+    studio.totalRating = totalRating / studio.review.length;
+
+    // Save the studio with the new or updated review
+    const updatedStudio = await studio.save();
+
+    res.json({ message: "Review posted successfully", updatedStudio });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: "An error occurred while posting the review." });
+  }
+};
+

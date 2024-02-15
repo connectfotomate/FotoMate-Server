@@ -120,7 +120,7 @@ export const vendorLoginVerify = async (req, res) => {
           res.status(200).json({
             vendor: vendorWithoutPassword,
             studio,
-            token,
+            token, 
             message: `Welcome ${vendor.name}`,
           });
         } else {
@@ -152,6 +152,7 @@ export const createStudio = async (req, res) => {
     const uploadGalleryImages = await galleryImages.map((image) => {
       return cloudinary.uploader.upload(image, {
         folder: "GalleryImages",
+        format: "webp"
       });
     });
 
@@ -202,6 +203,7 @@ export const updateCoverImage = async (req, res) => {
     const { _id, image } = req.body;
     const photoResult = await cloudinary.uploader.upload(image, {
       folder: "coverImage",
+      format: "webp"
     });
     const result = await Studio.findByIdAndUpdate(_id, {
       $set: { coverImage: photoResult.secure_url },
@@ -229,6 +231,7 @@ export const addPackage = async (req, res) => {
 
     const photoResult = await cloudinary.uploader.upload(packageImage, {
       folder: "packageImage",
+      formate: 'webp'
     });
     const servicesInstance = services.map((service) => ({
       serviceName: service.serviceName,
@@ -253,12 +256,18 @@ export const addPackage = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
+ 
 export const getPackages = async (req, res) => {
-  try {
+  try {  
     const { vendorId } = req.query;
     const packages = await PhotographyPackage.find({ vendorId: vendorId });
 
+    packages.forEach(packageImg => {
+      if (packageImg.image && typeof packageImg.image === 'string') {
+        packageImg.image = packageImg.image.replace(/\.jpg$/, ".webp"); 
+      }
+    });  
+  
     res.status(200).json(packages);
   } catch (error) {
     console.log(error.message);

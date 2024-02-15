@@ -43,7 +43,19 @@ const studioSchema = new mongoose.Schema({
   ],
   categories:[{
     type: String,
-  }]
+  }],
+  review: [
+    {
+      star: Number,
+      userReview: String,
+      postedBy: { type: mongoose.Types.ObjectId, ref: "user" },
+      postedDate: { type: Date}
+    },
+  ],
+  totalRating:{
+    type:Number,
+    default:0 
+  },
  
 });
 
