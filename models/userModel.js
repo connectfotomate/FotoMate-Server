@@ -45,4 +45,4 @@ wallet:{
     default: 0,
 },
 },{timestamps:true});
-export default mongoose.model("User",userSechema);
+export default mongoose.model("User",userSechema); 

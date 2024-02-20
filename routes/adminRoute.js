@@ -3,6 +3,7 @@ import {
   addCategory,
   addSubCategory,
   adminLogin,
+  adminReport,
   blockStudio,
   blockUser,
   blockVendor,
@@ -33,4 +34,5 @@ adminRoute.get("/categoryList", categoryList);
 adminRoute.get("/subcategory/:cat_id", subcategory);
 adminRoute.get('/bookingList',getBookingList)
 adminRoute.post('/cancelBooking',cancelBooking)
+adminRoute.get('/adminReport',adminReport)
 export default adminRoute;

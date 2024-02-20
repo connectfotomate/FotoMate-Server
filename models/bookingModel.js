@@ -57,9 +57,9 @@ const bookingSchema = new mongoose.Schema({
         required: true,
     },
     cancelReason: {
-        type: String, // Assuming the cancel reason is a string
+        type: String, 
     }
-});
+},{timestamps:true});
 
 const Booking = mongoose.model("Booking", bookingSchema);
 

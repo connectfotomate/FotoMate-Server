@@ -11,7 +11,7 @@ dotenv.config();
 
 export const adminLogin = async (req, res) => {
   try {
-    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminEmail = process.env.ADMIN_EMAIL; 
     const adminPassword = process.env.ADMIN_PASSWORD;
 
     const userName = "Admin";
@@ -291,37 +291,12 @@ export const getBookingList = async (req, res) => {
   }
 };
 
-// export const cancelBooking = async (req, res) => {
-//   try {
-//     console.log("working");
-//     const { reason, bookingId } = req.body;
-//     console.log(req.body);
-//     const booking = await Booking.findById(bookingId);
-//     console.log(booking, "booking");
-//     if (!bookingId) {
-//       return res.status(404).json({ error: "Booking not found " });
-//     }
-//     booking.isCancelled = true;
-//     booking.cancelReason = reason;
-//     booking.workStatus = "cancelled";
-//     await booking.save();
-//     res
-//       .status(200)
-//       .json({ message: "Booking cancelled successfully", booking });
-//   } catch (error) {
-//     console.log(error.message);
-//     res
-//       .status(500)
-//       .josn({ error: "An error occurred during cancelling booking" });
-//   }
-// };
+
 export const cancelBooking = async (req, res) => {
   try {
-    console.log("working");
     const { reason, bookingId } = req.body;
     console.log(req.body);
     const booking = await Booking.findById(bookingId);
-    console.log(booking, "booking");
     if (!booking) {
       return res.status(404).json({ error: "Booking not found" });
     }
@@ -346,3 +321,76 @@ export const cancelBooking = async (req, res) => {
     res.status(500).json({ error: "An error occurred during cancelling booking" });
   }
 };
+
+
+export const adminReport = async (req, res) => {
+  try {
+   
+    const today = new Date();
+    const lastWeekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
+    const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+    const lastYearStart = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+    const nextWeekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1); // Start from tomorrow
+    const nextWeekEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 8); // End after 7 days (inclusive)
+
+    const periods = [
+      { label: 'Today', start: today, end: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1) },
+      { label: 'Last Week', start: lastWeekStart, end: today },
+      { label: 'Last Month', start: lastMonthStart, end: today },
+      { label: 'Last Year', start: lastYearStart, end: today },
+      { label: 'Next Week', start: nextWeekStart, end: nextWeekEnd },
+      { label: 'Total', start: new Date(0), end: today } 
+    ];
+
+    
+    // Query for bookings in the next week
+    const nextWeekBookings = await Booking.find({
+      eventDate: { $gte: nextWeekStart, $lt: nextWeekEnd },
+      isPaid: false, // Assuming you want to include only paid bookings
+      isCancelled: false
+    });
+
+    const report = await Promise.all(periods.map(async period => {
+      let bookings;
+      if (period.label === 'Next Week') {
+        bookings = await Booking.find({
+          eventDate: { $gte: period.start, $lt: period.end },
+          isPaid: true,
+          isCancelled: false
+        });
+      } else {
+        bookings = await Booking.find({
+          eventDate: { $gte: period.start, $lt: period.end },
+          isPaid: false,
+          isCancelled: false
+        });
+      }
+
+      const users = await User.find({
+        createdAt: { $gte: period.start, $lt: period.end }
+      });
+
+      const vendors = await Vendor.find({
+        createdAt: { $gte: period.start, $lt: period.end }
+      });
+
+      const totalRevenue = bookings.reduce((acc, booking) => acc + booking.totalAmount, 0);
+
+      return {
+        period: period.label,
+        revenue: totalRevenue,
+        newUsersCount: users.length,
+        newVendorsCount: vendors.length,
+      };
+    }));
+
+        nextWeekBookings
+    res.status(200).json({report,nextWeekBookings});
+  } catch (error) {
+    console.error('Error generating admin report:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+
