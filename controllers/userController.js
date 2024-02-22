@@ -593,11 +593,9 @@ export const payment = async (req, res) => {
 
 export const cancelBooking = async (req, res) => {
   try {
-    console.log("working");
     const { reason, bookingId } = req.body;
     console.log(req.body);
     const booking = await Booking.findById(bookingId);
-    console.log(booking, "booking");
     if (!booking) {
       return res.status(404).json({ error: "Booking not found" });
     }

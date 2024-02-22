@@ -14,6 +14,7 @@ import {
   singleCategory,
   subcategory,
   unlistCategory,
+  updateWorkStatus,
   userList,
   vendorList,
 } from "../controllers/adminController.js";
@@ -35,4 +36,5 @@ adminRoute.get("/subcategory/:cat_id", subcategory);
 adminRoute.get('/bookingList',getBookingList)
 adminRoute.post('/cancelBooking',cancelBooking)
 adminRoute.get('/adminReport',adminReport)
+adminRoute.post('/markCompleted',updateWorkStatus)
 export default adminRoute;
