@@ -13,10 +13,9 @@ import messageRouter from './routes/messageRoute.js';
 const app = express();
 const server = createServer(app); 
 
-const PORT = 3001;
-const allowedOrigins = ['http://localhost:5173'];
+const PORT = 3000;
 app.use(cors({ 
-  origin: allowedOrigins,
+  // origin: allowedOrigins,
   credentials:true
  }));
 
