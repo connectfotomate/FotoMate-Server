@@ -7,7 +7,7 @@ const job = cron.schedule('*/14 * * * *', () => {
     console.log('Pinging server to keep it alive...');
     
     const options = {
-      hostname: 'fotomate-server.onrender.com',
+      hostname: 'fotomate.vercel.app',
       method: 'GET',
       timeout: 60000 
     };
