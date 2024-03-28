@@ -1,7 +1,6 @@
 
-const cron = require('node-cron');
-
-const https = require('https');
+import cron from 'node-cron'
+import https from 'https'
 
 const job = cron.schedule('*/14 * * * *', () => {
     console.log('Pinging server to keep it alive...');
