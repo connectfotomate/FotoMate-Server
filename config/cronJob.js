@@ -5,7 +5,7 @@ function pingServer() {
     console.log('Pinging server to keep it alive...');
     
     const options = {
-        hostname: 'fotomate.vercel.app',
+        hostname: 'fotomate-server.onrender.com',
         method: 'GET',
         timeout: 60000 
     };
@@ -26,6 +26,6 @@ function pingServer() {
     req.end();
 }
 
-export const job = cron.schedule('*/14 * * * *', pingServer);
+export const job = cron.schedule('*/13 * * * *', pingServer);
 
 job.start();
