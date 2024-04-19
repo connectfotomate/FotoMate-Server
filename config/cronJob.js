@@ -1,13 +1,13 @@
 import cron from 'node-cron';
 import https from 'https';
 
-function pingServer() {
+const job = cron.schedule('*/14 * * * *', () => {
     console.log('Pinging server to keep it alive...');
     
     const options = {
         hostname: 'fotomate-server.onrender.com',
         method: 'GET',
-        timeout: 60000 
+        timeout: 60000
     };
 
     const req = https.request(options, (res) => {
@@ -15,7 +15,7 @@ function pingServer() {
     });
 
     req.on('timeout', () => {
-        req.destroy();
+        req.abort();
         console.error('Request timed out');
     });
 
@@ -24,8 +24,6 @@ function pingServer() {
     });
 
     req.end();
-}
+});
 
-export const job = cron.schedule('*/13 * * * *', pingServer);
-
-job.start();
+export default job;
