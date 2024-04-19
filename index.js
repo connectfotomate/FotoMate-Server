@@ -7,9 +7,9 @@ import userRoute from "./routes/userRoute.js";
 import adminRoute from "./routes/adminRoute.js";
 import vendorRoute from "./routes/vendorRoute.js";
 import chatRouter from "./routes/chatRoute.js";
-import setupSocketIO from "./socketIo.js";
+import setupSocketIO from "./socketIo.js"; 
 import messageRouter from "./routes/messageRoute.js";
-import { job } from "./config/cronJob.js";
+import job  from "./config/cronJob.js";
 
 const app = express();
 const server = createServer(app);
