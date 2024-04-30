@@ -69,7 +69,7 @@ export const vendorList = async (req, res) => {
         $unwind: "$studioInfo",
       },
       {
-        $project: {
+        $project: { 
           _id: 1,
           name: 1,
           mobile: 1,
@@ -184,27 +184,47 @@ export const singleCategory = async (req, res) => {
 };
 export const editCategory = async (req, res) => {
   try {
-    const { cat_id, name, description } = req.body;
-    const category = await Category.findByIdAndUpdate(
-      { _id: cat_id },
+    const { cat_id, name, description, baseImage } = req.body;
+
+    let imageUrl;
+    if (baseImage) {
+      const image = await cloudinary.uploader.upload(baseImage, {
+        folder: "category_img",
+      });
+      imageUrl = image.secure_url;
+    }
+    let category = await Category.findById(cat_id);
+
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    if (!category.image && !imageUrl) {
+      imageUrl = null;
+    }
+
+    category = await Category.findByIdAndUpdate(
+      { _id: cat_id }, 
       {
         $set: {
           name: name,
           description: description,
+          image: imageUrl,
         },
       },
       { new: true }
     );
+
     res.status(201).json({ message: "Category Edited Successfully" });
   } catch (error) {
     if (error.code === 11000 && error.keyPattern && error.keyPattern.name) {
-      // Handle duplicate key error for the 'name' field
       return res.status(400).json({ message: "Category name already exists" });
     }
     console.log(error.message);
     res.status(500).json({ message: "Internal Server error" });
   }
 };
+
 
 export const addSubCategory = async (req, res) => {
   try {
@@ -427,9 +447,8 @@ export const updateWorkStatus = async(req,res)=>{
     const {id} = req.body;
     const booking = await Booking.findById(id);
     booking.workStatus = 'Completed'
-    booking.save()
+    booking.save() 
     res.status(201).json({message:'Work Stauts updated'})
-    console.log(id)
   } catch (error) {
     console.log(error.message)
   }
