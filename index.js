@@ -15,8 +15,11 @@ const app = express();
 const server = createServer(app);
 
 const PORT = 3000;
+
+const allowedOrigin = "https://fotomate.vercel.app";
 app.use(
   cors({
+    origin: allowedOrigin,
     credentials: true,
   })
 );
