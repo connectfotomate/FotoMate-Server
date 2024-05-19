@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import https from 'https';
 
-const job = cron.schedule('*/1 * * * *', () => {
+const job = cron.schedule('*/14 * * * *', () => {
   console.log('Pinging frontend to keep it alive...');
 
   const options = {
