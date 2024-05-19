@@ -6,10 +6,10 @@ const job = cron.schedule('*/14 * * * *', () => {
 
   const options = {
     hostname: 'fotomate.vercel.app',
-    port: 443, // Port for HTTPS
-    path: '/', // Path to your frontend endpoint, if needed
+    port: 443, 
+    path: '/', 
     method: 'GET',
-    timeout: 60000 // Timeout after 1 minute (60000 ms)
+    timeout: 60000 
   };
 
   const req = https.request(options, (res) => {
